@@ -8,10 +8,10 @@
 
 ## 已冻结的视觉基准
 
-- 原始待机基准：`game/FighterRPGDemo/assets/characters/liulan/xiuer-video-replica-idle-v1.png`
-- 当前高清待机：`game/FighterRPGDemo/assets/characters/liulan/xiuer-video-replica-idle-v2-enhanced.png`
-- 当前移动：`game/FighterRPGDemo/assets/characters/liulan/xiuer-regal-glide-loop-v3.png`
-- 当前跳跃：`game/FighterRPGDemo/assets/characters/liulan/xiuer-idle-motion-jump-v1.png`
+- 原始待机基准：`game/FighterRPGDemo/assets/characters/xiuer/xiuer-video-replica-idle-v1.png`
+- 当前高清待机：`game/FighterRPGDemo/assets/characters/xiuer/xiuer-video-replica-idle-v2-enhanced.png`
+- 当前移动：`game/FighterRPGDemo/assets/characters/xiuer/xiuer-video-move-loop-v1.png`
+- 当前跳跃：`game/FighterRPGDemo/assets/characters/xiuer/xiuer-idle-motion-jump-v1.png`
 
 增强版本不得改变头冠、晶核、肩晶、手爪、腿部比例和披风连接方式。
 
@@ -23,7 +23,7 @@
 
 ### 移动
 
-五帧闭环悬行，水平速度 500 px/s，不使用加速过程。角色保持接近待机的直立姿态，运动主要由披风轮廓渐进变化表现；不绘制抽象紫色尾流。
+使用完整连续动作视频制作：按 12 FPS 抽取全部 121 帧，去除灰色背景与移动水印后，统一注册到 512×512 画布。视频负责角色和披风的连续形变，Godot 只负责 500 px/s 的水平位移且不使用加速过程。完整循环约 10 秒，避免短循环造成的机械重复和关键帧跳变。
 
 ### 跳跃
 
@@ -54,6 +54,7 @@
 4. 相邻帧必须呈现渐进运动，不能依赖增加帧数修复错误关键姿势。
 5. 特效与角色分层；若特效不能增强动作信息，应先删除。
 6. 每次替换图集后强制 Godot 重新导入，并运行行为测试。
+7. 连续移动类动作优先先制作完整视频，再等间隔抽帧；抽帧后仍须统一画布、角色高度和躯干锚点，不能直接按每帧外接矩形居中。
 
 ## 下一步
 

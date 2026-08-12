@@ -7,7 +7,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 CONCEPT = ROOT / "game" / "FighterRPGDemo" / "assets" / "concept_art"
-CHARACTER = ROOT / "game" / "FighterRPGDemo" / "assets" / "characters" / "liulan"
+CHARACTER = ROOT / "game" / "FighterRPGDemo" / "assets" / "characters" / "xiuer"
 
 CELL = 896
 CORE_TARGET_WIDTH = 125.0

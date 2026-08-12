@@ -6,7 +6,7 @@ from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CHARACTER = ROOT / "game" / "FighterRPGDemo" / "assets" / "characters" / "liulan"
+CHARACTER = ROOT / "game" / "FighterRPGDemo" / "assets" / "characters" / "xiuer"
 SOURCE = CHARACTER / "xiuer-video-replica-idle-v2-enhanced.png"
 OUTPUT = CHARACTER / "xiuer-idle-motion-jump-v1.png"
 CELL = 512
