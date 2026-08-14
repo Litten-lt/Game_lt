@@ -14,3 +14,8 @@ Thumbs.db
 desktop.ini
 *.tmp
 *.bak
+
+# Local media conversion dependencies and intermediate frames
+.tools/
+source_assets/tools/python_runtime/
+source_assets/monsters/*/animation_work/
