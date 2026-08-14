@@ -1,19 +1,16 @@
-# Godot generated files
-**/.godot/
-.godot-test-appdata/
+# Godot generated data
+.godot/
+.godot_test_userdata/
 
-# Local builds and exports
-builds/
-*.pck
+# Runtime logs and local exports
+*.log
+output/
+build/
+dist/
 
-# IDE and OS files
-.vscode/
-.idea/
+# OS/editor files
 .DS_Store
 Thumbs.db
-
-# Generated diagnostics and local experiments
-game/FighterRPGDemo/diagnostics/
-*.tmp.png
-tools/__pycache__/
-.cleanup-backup/
+desktop.ini
+*.tmp
+*.bak

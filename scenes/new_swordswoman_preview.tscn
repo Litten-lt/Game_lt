@@ -1,0 +1,43 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/new_swordswoman.tscn" id="1"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape_ground"]
+size = Vector2(1280, 110)
+
+[node name="NewSwordswomanPreview" type="Node2D"]
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.055, 0.075, 0.09, 1)
+mouse_filter = 2
+
+[node name="GroundVisual" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, 610, 1280, 610, 1280, 720, 0, 720)
+color = Color(0.12, 0.16, 0.17, 1)
+
+[node name="Ground" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
+position = Vector2(640, 665)
+shape = SubResource("RectangleShape_ground")
+
+[node name="Guide" type="Line2D" parent="."]
+points = PackedVector2Array(0, 610, 1280, 610)
+width = 2.0
+default_color = Color(0.5, 0.65, 0.62, 0.45)
+
+[node name="NewSwordswoman" parent="." instance=ExtResource("1")]
+position = Vector2(640, 610)
+
+[node name="Info" type="Label" parent="."]
+offset_left = 24.0
+offset_top = 22.0
+offset_right = 900.0
+offset_bottom = 70.0
+text = "晓光 CharacterBody2D  ·  A/D 行走  ·  Shift 奔跑  ·  K 二段跳  ·  L 瞬移  ·  U 技能"
+theme_override_colors/font_color = Color(0.86, 0.81, 0.66, 1)
+theme_override_font_sizes/font_size = 20

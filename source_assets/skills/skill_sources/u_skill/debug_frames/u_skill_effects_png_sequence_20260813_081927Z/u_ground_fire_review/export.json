@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "profileId": "u_skill_effects",
+  "animationId": "u_ground_fire_review",
+  "canvas": {
+    "width": 1085,
+    "height": 264,
+    "originPixelX": 542,
+    "originPixelY": 216,
+    "padding": 18,
+    "autoMeasured": true
+  },
+  "kind": "sequence",
+  "audio": {
+    "schemaVersion": 1,
+    "files": [],
+    "events": []
+  },
+  "frames": [
+    {
+      "filename": "frame_0001.png",
+      "time": 0.041666666666666664,
+      "sourceFrame": 4,
+      "durationMs": 83.33333333333333,
+      "x": 0,
+      "y": 0,
+      "width": 1085,
+      "height": 264
+    },
+    {
+      "filename": "frame_0002.png",
+      "time": 0.125,
+      "sourceFrame": 5,
+      "durationMs": 83.33333333333333,
+      "x": 0,
+      "y": 0,
+      "width": 1085,
+      "height": 264
+    },
+    {
+      "filename": "frame_0003.png",
+      "time": 0.20833333333333331,
+      "sourceFrame": 6,
+      "durationMs": 83.33333333333333,
+      "x": 0,
+      "y": 0,
+      "width": 1085,
+      "height": 264
+    },
+    {
+      "filename": "frame_0004.png",
+      "time": 0.2916666666666667,
+      "sourceFrame": 7,
+      "durationMs": 83.33333333333333,
+      "x": 0,
+      "y": 0,
+      "width": 1085,
+      "height": 264
+    },
+    {
+      "filename": "frame_0005.png",
+      "time": 0.375,
+      "sourceFrame": 8,
+      "durationMs": 83.33333333333333,
+      "x": 0,
+      "y": 0,
+      "width": 1085,
+      "height": 264
+    },
+    {
+      "filename": "frame_0006.png",
+      "time": 0.4583333333333333,
+      "sourceFrame": 9,
+      "durationMs": 83.33333333333333,
+      "x": 0,
+      "y": 0,
+      "width": 1085,
+      "height": 264
+    },
+    {
+      "filename": "frame_0007.png",
+      "time": 0.5416666666666666,
+      "sourceFrame": 10,
+      "durationMs": 83.33333333333333,
+      "x": 0,
+      "y": 0,
+      "width": 1085,
+      "height": 264
+    },
+    {
+      "filename": "frame_0008.png",
+      "time": 0.6249999999999999,
+      "sourceFrame": 11,
+      "durationMs": 83.33333333333333,
+      "x": 0,
+      "y": 0,
+      "width": 1085,
+      "height": 264
+    }
+  ],
+  "completedAt": "2026-08-13T08:19:27.627Z"
+}

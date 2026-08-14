@@ -1,0 +1,89 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/shrine_test_level.gd" id="1_level"]
+[ext_resource type="PackedScene" path="res://scenes/new_swordswoman.tscn" id="2_player"]
+[ext_resource type="Texture2D" path="res://assets/environments/shrine/shrine_00.png" id="3_bg0"]
+[ext_resource type="Texture2D" path="res://assets/environments/shrine/shrine_01.png" id="4_bg1"]
+[ext_resource type="Texture2D" path="res://assets/environments/shrine/shrine_02.png" id="5_bg2"]
+[ext_resource type="Texture2D" path="res://assets/environments/shrine/shrine_03.png" id="6_bg3"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape_ground"]
+size = Vector2(5120, 110)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape_wall"]
+size = Vector2(40, 720)
+
+[node name="ShrineTestLevel" type="Node2D"]
+script = ExtResource("1_level")
+
+[node name="Backgrounds" type="Node2D" parent="."]
+z_index = -10
+
+[node name="Area0" type="Sprite2D" parent="Backgrounds"]
+texture = ExtResource("3_bg0")
+position = Vector2(640, 360)
+scale = Vector2(0.449438, 0.45)
+
+[node name="Area1" type="Sprite2D" parent="Backgrounds"]
+texture = ExtResource("4_bg1")
+position = Vector2(1920, 360)
+scale = Vector2(0.449438, 0.45)
+
+[node name="Area2" type="Sprite2D" parent="Backgrounds"]
+texture = ExtResource("5_bg2")
+position = Vector2(3200, 360)
+scale = Vector2(0.449438, 0.45)
+
+[node name="Area3" type="Sprite2D" parent="Backgrounds"]
+texture = ExtResource("6_bg3")
+position = Vector2(4480, 360)
+scale = Vector2(0.449438, 0.45)
+
+[node name="GroundTint" type="Polygon2D" parent="."]
+z_index = -1
+polygon = PackedVector2Array(0, 610, 5120, 610, 5120, 720, 0, 720)
+color = Color(0.08, 0.105, 0.105, 0.3)
+
+[node name="Ground" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
+position = Vector2(2560, 665)
+shape = SubResource("RectangleShape_ground")
+
+[node name="LeftWall" type="StaticBody2D" parent="."]
+collision_layer = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftWall"]
+position = Vector2(-20, 360)
+shape = SubResource("RectangleShape_wall")
+
+[node name="RightWall" type="StaticBody2D" parent="."]
+collision_layer = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RightWall"]
+position = Vector2(5140, 360)
+shape = SubResource("RectangleShape_wall")
+
+[node name="NewSwordswoman" parent="." instance=ExtResource("2_player")]
+position = Vector2(320, 610)
+
+[node name="Camera2D" type="Camera2D" parent="NewSwordswoman"]
+position = Vector2(180, -250)
+position_smoothing_enabled = true
+position_smoothing_speed = 7.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Info" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 20.0
+offset_right = 1100.0
+offset_bottom = 58.0
+text = "晓光 · 夜色神社测试关  |  A/D移动 · Shift奔跑 · K二段跳 · L瞬移 · U技能"
+theme_override_colors/font_color = Color(0.92, 0.84, 0.66, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 20
