@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/shrine_test_level.gd" id="1_level"]
 [ext_resource type="PackedScene" path="res://scenes/new_swordswoman.tscn" id="2_player"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/environments/shrine/shrine_01.png" id="4_bg1"]
 [ext_resource type="Texture2D" path="res://assets/environments/shrine/shrine_02.png" id="5_bg2"]
 [ext_resource type="Texture2D" path="res://assets/environments/shrine/shrine_03.png" id="6_bg3"]
+[ext_resource type="PackedScene" path="res://scenes/rock_crown_monster.tscn" id="7_monster"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape_ground"]
 size = Vector2(5120, 110)
@@ -73,6 +74,12 @@ position = Vector2(320, 610)
 position = Vector2(180, -250)
 position_smoothing_enabled = true
 position_smoothing_speed = 7.0
+
+[node name="RockCrownMonster" parent="." instance=ExtResource("7_monster")]
+position = Vector2(1120, 610)
+target_path = NodePath("../NewSwordswoman")
+detection_radius = 420.0
+move_speed = 72.0
 
 [node name="HUD" type="CanvasLayer" parent="."]
 
