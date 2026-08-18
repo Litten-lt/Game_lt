@@ -1,6 +1,14 @@
 # Godot generated data
 .godot/
 .godot_test_userdata/
+.godot-test-appdata/
+game/*/.godot/
+
+# Rebuildable media analysis and local decoder runtimes
+analysis_output/
+tools/ffmpeg/
+tools/ffmpeg*.zip
+tools/python_pkgs/
 
 # Runtime logs and local exports
 *.log

@@ -14,26 +14,15 @@ const BASE_SCALE := 0.36
 const RUN_SCALE := 0.33
 const AFTERIMAGE_INTERVAL := 0.045
 const AFTERIMAGE_LIFETIME := 0.22
-const U_CHARGE_IN_TIME := 0.40
-const U_FADE_OUT_TIME := 0.16
-const U_HIDDEN_TIME := 0.10
-const U_REAPPEAR_HOLD_TIME := 1.00
-const U_GROUND_FIRE_FRAME_TIME := 1.0 / 9.0
-const U_GROUND_FIRE_SCALE := 0.36
-# The Sprite2D remains centered. For the 1085x264 export, an authored floor
-# origin at y=216 becomes a centered texture offset of 132-216 = -84.
-const U_GROUND_FIRE_CENTERED_OFFSET_Y := -84.0
-# Put Xiaoguang at the leading edge; the long flame strip trails behind her.
-const U_GROUND_FIRE_LEAD_OFFSET_X := -420.0
-const U_POSE_TRANSITION_TIME := 0.28
-const U_POSE_HOLD_TIME := 0.18
-const U_DURATION := U_CHARGE_IN_TIME + U_FADE_OUT_TIME + U_HIDDEN_TIME + U_REAPPEAR_HOLD_TIME + U_POSE_TRANSITION_TIME + U_POSE_HOLD_TIME
-const U_DISTANCE := 480.0
-const U_COOLDOWN := 2.0
-
+const ATTACK_FRAME_DURATIONS := [
+	[0.06, 0.05, 0.04, 0.04, 0.07, 0.04, 0.05, 0.10],
+	[0.08, 0.05, 0.04, 0.04, 0.04, 0.05, 0.08, 0.04, 0.05, 0.08],
+	[0.12, 0.04, 0.04, 0.04, 0.04, 0.08, 0.05, 0.04, 0.07, 0.12],
+]
+const ATTACK_MOVE_SPEEDS := [185.0, 85.0, 625.0]
+const ATTACK_MOVE_LAST_FRAMES := [5, 5, 5]
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var dash_dust: Sprite2D = $DashDust
-@onready var u_ground_fire: Sprite2D = $UGroundFire
 var animations: Dictionary = {}
 var current_animation := "idle"
 var frame_index := 0
@@ -47,15 +36,8 @@ var dash_target_x := 0.0
 var dash_dust_origin := Vector2.ZERO
 var afterimage_time := 0.0
 var jump_floor_y := 0.0
-var u_time := 0.0
-var u_cooldown := 0.0
-var u_teleported := false
-var u_locked_facing := 1.0
-var u_charge_frames: Array[Texture2D] = []
-var u_reappear_charge_frames: Array[Texture2D] = []
-var u_pose_frames: Array[Texture2D] = []
-var u_afterimages_spawned := false
-var u_ground_fire_frames: Array[Texture2D] = []
+var attack_stage := 0
+var attack_queued := false
 
 func _ready() -> void:
 	animations = {
@@ -64,40 +46,36 @@ func _ready() -> void:
 		"run": [_load_frames("run", 11), 12.0, true],
 		"jump": [_load_frames("jump", 17), 12.0, false],
 		"dash": [_load_frames("dash", 17), 14.0, false],
+		"attack_1": [_load_frames("attack_1", 8), 0.0, false],
+		"attack_2": [_load_frames("attack_2", 10), 0.0, false],
+		"attack_3": [_load_frames("attack_3", 10), 0.0, false],
 	}
-	u_charge_frames = _load_frames("u_skill_charge", 9)
-	u_reappear_charge_frames = _load_frames("u_skill_reappear_charge", 9)
-	u_pose_frames = _load_frames("u_skill_pose", 6)
-	u_ground_fire_frames = _load_effect_frames("u_skill/ground_fire", 8)
-	assert(u_charge_frames.size() == 9 and u_reappear_charge_frames.size() == 9 and u_pose_frames.size() == 6 and u_ground_fire_frames.size() == 8)
 	for animation_name in animations:
 		assert(not (animations[animation_name][0] as Array).is_empty())
 	sprite.texture = (animations["idle"][0] as Array)[0]
 	dash_dust.texture = load("res://assets/characters/xiaoguang/effects/dash_dust.png")
 	dash_dust.top_level = true
 	dash_dust.visible = false
-	u_ground_fire.visible = false
 	jump_floor_y = global_position.y
 
 func _physics_process(delta: float) -> void:
 	dash_cooldown = maxf(0.0, dash_cooldown - delta)
-	u_cooldown = maxf(0.0, u_cooldown - delta)
 	var axis := Input.get_axis("move_left", "move_right")
-	# A U skill locks its starting direction and all normal controls. Only the
-	# regular L dash may cancel it.
-	if u_time <= 0.0 and absf(axis) > 0.01:
-		facing = signf(axis)
+	if absf(axis) > 0.01:
+		if attack_stage == 0:
+			facing = signf(axis)
 
-	if u_time > 0.0 and Input.is_action_just_pressed("dash") and dash_time <= 0.0 and dash_cooldown <= 0.0:
-		_cancel_u_skill()
-		_start_dash()
-	elif Input.is_action_just_pressed("skill_u") and u_time <= 0.0 and dash_time <= 0.0 and u_cooldown <= 0.0 and is_on_floor():
-		_start_u_skill()
-	elif Input.is_action_just_pressed("dash") and dash_time <= 0.0 and u_time <= 0.0 and dash_cooldown <= 0.0:
+	if Input.is_action_just_pressed("attack"):
+		if attack_stage > 0:
+			attack_queued = attack_stage < 3
+		elif dash_time <= 0.0 and is_on_floor():
+			_start_attack(1)
+
+	if Input.is_action_just_pressed("dash") and attack_stage == 0 and dash_time <= 0.0 and dash_cooldown <= 0.0:
 		_start_dash()
 
-	if u_time > 0.0:
-		_update_u_skill(delta)
+	if attack_stage > 0:
+		_update_attack_motion(delta)
 	elif dash_time > 0.0:
 		_update_dash(delta)
 	else:
@@ -120,7 +98,7 @@ func _physics_process(delta: float) -> void:
 		jumps_used = 0
 		jump_floor_y = global_position.y
 
-	if u_time > 0.0:
+	if attack_stage > 0:
 		pass
 	elif dash_time > 0.0:
 		_set_animation("dash")
@@ -131,113 +109,49 @@ func _physics_process(delta: float) -> void:
 	else:
 		_set_animation("idle")
 	_update_visual_scale(delta)
-	# U skill owns its frame timing directly in _update_u_skill().
-	if u_time <= 0.0:
+	if attack_stage > 0:
+		_advance_attack(delta)
+	else:
 		_advance_animation(delta)
 
-func _start_u_skill() -> void:
-	u_locked_facing = facing
-	u_time = U_DURATION
-	u_cooldown = U_COOLDOWN
-	u_teleported = false
-	u_afterimages_spawned = false
-	u_ground_fire.visible = false
+func _start_attack(stage: int) -> void:
+	attack_stage = stage
+	attack_queued = false
 	velocity = Vector2.ZERO
-	current_animation = "u_skill"
-	frame_index = 0
-	frame_time = 0.0
+	_set_animation("attack_%d" % attack_stage)
 
-func _update_u_skill(delta: float) -> void:
-	# Never allow held movement input to turn the character during the skill.
-	facing = u_locked_facing
-	u_time = maxf(0.0, u_time - delta)
-	velocity = Vector2.ZERO
-	var elapsed := U_DURATION - u_time
-	# Preserve every authored idle-to-charge transition frame.
-	if elapsed < U_CHARGE_IN_TIME:
-		frame_index = clampi(int(elapsed / U_CHARGE_IN_TIME * 9.0), 0, 8)
-		sprite.visible = true
-		sprite.modulate.a = 1.0
-		sprite.texture = u_charge_frames[frame_index]
-	# Hold the final charge pose, then dissolve through character afterimages.
-	elif elapsed < U_CHARGE_IN_TIME + U_FADE_OUT_TIME:
-		sprite.texture = u_charge_frames[8]
-		if not u_afterimages_spawned:
-			u_afterimages_spawned = true
-			_spawn_u_charge_afterimages()
-		var fade_elapsed := elapsed - U_CHARGE_IN_TIME
-		sprite.modulate.a = 1.0 - fade_elapsed / U_FADE_OUT_TIME
-	elif elapsed < U_CHARGE_IN_TIME + U_FADE_OUT_TIME + U_HIDDEN_TIME:
-		if not u_teleported:
-			u_teleported = true
-			var motion := Vector2(facing * U_DISTANCE, 0.0)
-			# Test the path first, then perform exactly the safe travel once.
-			var collision := move_and_collide(motion, true)
-			if collision:
-				motion = collision.get_travel()
-			move_and_collide(motion)
-		sprite.visible = false
+func _update_attack_motion(delta: float) -> void:
+	var last_move_frame: int = int(ATTACK_MOVE_LAST_FRAMES[attack_stage - 1])
+	var move_speed: float = float(ATTACK_MOVE_SPEEDS[attack_stage - 1])
+	var moving: bool = frame_index <= last_move_frame
+	velocity.x = facing * move_speed if moving else 0.0
+	if not is_on_floor():
+		velocity.y += GRAVITY * delta
 	else:
-		sprite.visible = true
-		sprite.modulate.a = 1.0
-		var recovery_elapsed := elapsed - U_CHARGE_IN_TIME - U_FADE_OUT_TIME - U_HIDDEN_TIME
-		# Reappear in the final charge pose and hold for exactly one second.
-		if recovery_elapsed < U_REAPPEAR_HOLD_TIME:
-			frame_index = clampi(int(recovery_elapsed / U_REAPPEAR_HOLD_TIME * float(u_reappear_charge_frames.size())), 0, u_reappear_charge_frames.size() - 1)
-			sprite.texture = u_reappear_charge_frames[frame_index]
-		else:
-			var pose_elapsed := recovery_elapsed - U_REAPPEAR_HOLD_TIME
-			frame_index = clampi(int(pose_elapsed / U_POSE_TRANSITION_TIME * 6.0), 0, 5) if pose_elapsed < U_POSE_TRANSITION_TIME else 5
-			sprite.texture = u_pose_frames[frame_index]
-		# Play the user-curated grounded sequence once when Xiaoguang reappears.
-		var fire_duration := U_GROUND_FIRE_FRAME_TIME * float(u_ground_fire_frames.size())
-		if recovery_elapsed < fire_duration:
-			u_ground_fire.visible = true
-			var fire_index := clampi(int(recovery_elapsed / U_GROUND_FIRE_FRAME_TIME), 0, u_ground_fire_frames.size() - 1)
-			u_ground_fire.texture = u_ground_fire_frames[fire_index]
-			# Align the exported y=216 floor anchor with the character's floor point.
-			u_ground_fire.global_position = global_position
-			u_ground_fire.offset.x = U_GROUND_FIRE_LEAD_OFFSET_X
-			u_ground_fire.offset.y = U_GROUND_FIRE_CENTERED_OFFSET_Y
-			u_ground_fire.scale = Vector2(U_GROUND_FIRE_SCALE * facing, U_GROUND_FIRE_SCALE)
-			u_ground_fire.modulate = Color(1.15, 1.05, 1.05, 1.0)
-		else:
-			u_ground_fire.visible = false
-	if u_time <= 0.0:
-		u_ground_fire.visible = false
-		sprite.visible = true
-		sprite.modulate.a = 1.0
-		current_animation = "idle"
-		frame_index = 0
+		velocity.y = 0.0
 
-func _cancel_u_skill() -> void:
-	u_time = 0.0
-	u_teleported = false
-	u_afterimages_spawned = false
-	u_ground_fire.visible = false
-	sprite.visible = true
-	sprite.modulate = Color.WHITE
-	velocity = Vector2.ZERO
-	current_animation = "idle"
-	frame_index = 0
-	frame_time = 0.0
-
-func _spawn_u_charge_afterimages() -> void:
-	for index in range(3):
-		var ghost := Sprite2D.new()
-		ghost.texture = u_charge_frames[8]
-		ghost.global_position = global_position + Vector2(-facing * float(index + 1) * 14.0, 0.0)
-		ghost.scale = sprite.scale
-		ghost.centered = sprite.centered
-		ghost.offset = sprite.offset
-		ghost.texture_filter = sprite.texture_filter
-		ghost.modulate = Color(0.9, 0.25, 0.3, 0.34 - index * 0.07)
-		ghost.z_index = -1
-		get_tree().current_scene.add_child(ghost)
-		var tween := ghost.create_tween().set_parallel(true)
-		tween.tween_property(ghost, "modulate:a", 0.0, 0.20 + index * 0.035)
-		tween.tween_property(ghost, "position:x", ghost.position.x - facing * 28.0, 0.20 + index * 0.035)
-		tween.chain().tween_callback(ghost.queue_free)
+func _advance_attack(delta: float) -> void:
+	var animation_data: Array = animations[current_animation] as Array
+	var frames: Array = animation_data[0] as Array
+	var durations: Array = ATTACK_FRAME_DURATIONS[attack_stage - 1] as Array
+	frame_time += delta
+	while frame_time >= float(durations[frame_index]):
+		frame_time -= float(durations[frame_index])
+		frame_index += 1
+		if frame_index >= frames.size():
+			if attack_queued and attack_stage < 3:
+				_start_attack(attack_stage + 1)
+				animation_data = animations[current_animation] as Array
+				frames = animation_data[0] as Array
+			else:
+				attack_stage = 0
+				attack_queued = false
+				velocity.x = 0.0
+				_set_animation("idle")
+				animation_data = animations[current_animation] as Array
+				frames = animation_data[0] as Array
+			break
+	sprite.texture = frames[frame_index]
 
 func _start_dash() -> void:
 	dash_time = DASH_DURATION
@@ -332,14 +246,6 @@ func _load_frames(folder: String, count: int) -> Array[Texture2D]:
 	var frames: Array[Texture2D] = []
 	for index in range(count):
 		var texture := load("res://assets/characters/xiaoguang/animations/%s/frame_%03d.png" % [folder, index]) as Texture2D
-		if texture:
-			frames.append(texture)
-	return frames
-
-func _load_effect_frames(folder: String, count: int) -> Array[Texture2D]:
-	var frames: Array[Texture2D] = []
-	for index in range(count):
-		var texture := load("res://assets/characters/xiaoguang/effects/%s/frame_%03d.png" % [folder, index]) as Texture2D
 		if texture:
 			frames.append(texture)
 	return frames
